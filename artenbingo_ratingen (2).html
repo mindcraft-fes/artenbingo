@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Artenbingo Ratingen</title>
+<style>
+:root {
+  --cream: #f5f0e8;
+  --green-dark: #1a3d1a;
+  --green: #2d6b2d;
+  --green-light: #4a9a4a;
+  --text: #1a2e1a;
+  --gold: #c9a84c;
+  --gold-light: #f0d98a;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--cream); font-family: 'Segoe UI', Arial, sans-serif; color: var(--text); min-height: 100vh; }
+
+/* ── LOGIN ── */
+.login-overlay {
+  position: fixed; inset: 0; z-index: 2000;
+  background: linear-gradient(135deg, #1a3d1a 0%, #2d6b2d 60%, #4a9a4a 100%);
+  display: flex; align-items: center; justify-content: center; padding: 20px;
+}
+.login-box {
+  background: white; border-radius: 24px; padding: 40px 36px 32px;
+  max-width: 440px; width: 100%; text-align: center;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.4);
+}
+.login-box .leaf-icon { font-size: 3.5rem; margin-bottom: 8px; }
+.login-box h2 { font-size: 1.8rem; font-weight: 900; color: var(--green-dark); margin-bottom: 4px; }
+.login-box .sub { font-size: 0.85rem; color: #888; margin-bottom: 28px; }
+.login-field { margin-bottom: 14px; text-align: left; }
+.login-field label { display: block; font-size: 0.78rem; font-weight: 600; color: #555; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px; }
+.login-field input { width: 100%; border: 2px solid #e0e0e0; border-radius: 10px; padding: 11px 14px; font-size: 0.95rem; outline: none; transition: border 0.2s; font-family: inherit; }
+.login-field input:focus { border-color: var(--green-light); }
+.login-field input.error { border-color: #e05050; }
+.login-btn { width: 100%; background: var(--green-dark); color: white; border: none; border-radius: 12px; padding: 13px; font-size: 1rem; font-weight: 700; cursor: pointer; margin-top: 6px; transition: background 0.2s; font-family: inherit; }
+.login-btn:hover { background: var(--green); }
+.login-hint { font-size: 0.72rem; color: #aaa; margin-top: 14px; }
+
+/* ── HEADER ── */
+.header { background: linear-gradient(135deg, #1a3d1a 0%, #2d6b2d 60%, #4a9a4a 100%); color: white; text-align: center; padding: 24px 20px 18px; position: relative; overflow: hidden; }
+.header::before { content:''; position:absolute; inset:0; background: radial-gradient(ellipse at 30% 50%, rgba(255,255,255,0.07) 0%, transparent 60%), radial-gradient(ellipse at 70% 50%, rgba(201,168,76,0.12) 0%, transparent 60%); }
+.header-inner { position: relative; z-index: 1; }
+.header h1 { font-size: clamp(1.8rem,5vw,3rem); font-weight: 900; letter-spacing:-1px; }
+.header h1 em { color: var(--gold-light); font-style: normal; }
+.header .location { font-size:0.85rem; letter-spacing:3px; text-transform:uppercase; opacity:0.75; margin-top:4px; }
+.header .student-name { font-size:0.9rem; opacity:0.9; margin-top:5px; color:var(--gold-light); font-weight:600; }
+.tot-wrap { max-width:440px; margin:12px auto 0; }
+.tot-bg { background:rgba(255,255,255,0.2); border-radius:20px; height:8px; overflow:hidden; }
+.tot-bar { height:100%; background:linear-gradient(90deg,var(--gold),var(--gold-light)); border-radius:20px; transition:width 0.5s ease; width:0%; }
+.tot-lbl { font-size:0.8rem; opacity:0.85; margin-top:5px; }
+
+/* ── SAVE BAR ── */
+.save-bar { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; padding:10px 16px; background:white; border-bottom:2px solid #eee; position:sticky; top:0; z-index:100; box-shadow:0 2px 8px rgba(0,0,0,0.06); }
+.save-bar-btn { display:flex; align-items:center; gap:6px; border:2px solid; border-radius:10px; padding:7px 14px; font-family:inherit; font-size:0.78rem; font-weight:600; cursor:pointer; transition:all 0.2s; }
+.save-btn  { background:#f0f7f0; border-color:var(--green); color:var(--green); }
+.save-btn:hover  { background:var(--green); color:white; }
+.load-btn  { background:#f0f5fb; border-color:#5b8db8; color:#2d5a8a; }
+.load-btn:hover  { background:#2d5a8a; color:white; }
+.send-btn  { background:#e8f5e0; border-color:#3a7d44; color:#2d5e35; }
+.send-btn:hover  { background:#3a7d44; color:white; }
+.pdf-btn   { background:#fff5e0; border-color:var(--gold); color:#8a6010; }
+.pdf-btn:hover   { background:var(--gold); color:white; }
+.save-status { font-size:0.72rem; color:#aaa; align-self:center; }
+
+/* ── TABS ── */
+.tabs { display:flex; flex-wrap:wrap; justify-content:center; gap:6px; padding:14px 12px 0; max-width:1100px; margin:0 auto; }
+.tab-btn { display:flex; align-items:center; gap:6px; background:white; border:2px solid #ddd; border-radius:12px; padding:7px 13px; font-family:inherit; font-size:0.8rem; font-weight:500; cursor:pointer; color:var(--text); transition:all 0.2s; white-space:nowrap; }
+.tab-btn:hover { border-color:var(--green-light); background:#f0f7f0; }
+.tab-btn.active { background:var(--green-dark); border-color:var(--green-dark); color:white; }
+.tab-btn.complete { background:var(--gold); border-color:var(--gold); color:#1a3d1a; }
+.tab-count { background:rgba(0,0,0,0.1); border-radius:20px; padding:1px 8px; font-size:0.72rem; }
+.tab-btn.active .tab-count { background:rgba(255,255,255,0.2); color:white; }
+.tab-btn-special { background:linear-gradient(135deg,#1a3d1a,#2d6b2d) !important; border-color:#1a3d1a !important; color:white !important; font-weight:700 !important; box-shadow:0 2px 10px rgba(26,61,26,0.35); margin-left:6px; border-left:3px solid var(--gold) !important; }
+.tab-btn-special .tab-count { background:rgba(255,255,255,0.2) !important; color:white !important; }
+.tab-btn-highscore { background:linear-gradient(135deg,#7a5000,#c9a84c) !important; border-color:#c9a84c !important; color:white !important; font-weight:700 !important; box-shadow:0 2px 10px rgba(201,168,76,0.4); margin-left:6px; }
+
+/* ── SECTIONS ── */
+.section { display:none; max-width:1100px; margin:0 auto; padding:14px 12px 30px; }
+.section.active { display:block; }
+.sec-header { display:flex; align-items:center; gap:18px; background:white; border-radius:18px; padding:16px 20px; margin-bottom:14px; box-shadow:0 2px 12px rgba(0,0,0,0.07); }
+.sec-info { flex:1; min-width:0; }
+.sec-title { font-size:1.45rem; font-weight:700; }
+.sec-sub { font-size:0.78rem; color:#999; margin-top:2px; }
+.sec-prog-wrap { display:flex; align-items:center; gap:10px; margin-top:7px; }
+.sec-prog-bg { flex:1; height:6px; background:#eee; border-radius:10px; overflow:hidden; }
+.sec-prog-bar { height:100%; border-radius:10px; transition:width 0.4s ease; width:0%; }
+.sec-prog-txt { font-size:0.75rem; color:#999; font-weight:500; min-width:34px; }
+.obs-link { display:inline-flex; align-items:center; gap:5px; margin-top:7px; font-size:0.73rem; text-decoration:none; border:1.5px solid; border-radius:20px; padding:3px 12px; transition:all 0.2s; }
+.obs-link:hover { color:white !important; }
+
+/* ── BINGO GRID ── */
+.bingo-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:9px; }
+@media(max-width:600px){ .bingo-grid { grid-template-columns:repeat(2,1fr); gap:7px; } }
+@media(min-width:601px) and (max-width:850px){ .bingo-grid { grid-template-columns:repeat(4,1fr); } }
+
+/* ── CARDS ── */
+.card { background:white; border-radius:13px; overflow:hidden; border:2px solid transparent; box-shadow:0 2px 8px rgba(0,0,0,0.07); cursor:pointer; transition:all 0.25s ease; position:relative; }
+.card:hover { transform:translateY(-3px); box-shadow:0 8px 22px rgba(0,0,0,0.14); }
+.card.checked { border-color:var(--gold); box-shadow:0 4px 16px rgba(201,168,76,0.3); }
+.card.needs-proof { border-color:#e05050 !important; }
+.card-overlay { position:absolute; inset:0; background:rgba(26,61,26,0.82); display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity 0.25s; }
+.card.checked .card-overlay { opacity:1; }
+.checkmark { width:42px; height:42px; border-radius:50%; background:var(--gold); display:flex; align-items:center; justify-content:center; font-size:20px; color:#1a3d1a; font-weight:700; transform:scale(0); transition:transform 0.3s cubic-bezier(0.175,0.885,0.32,1.275); }
+.card.checked .checkmark { transform:scale(1); }
+.card-rank { position:absolute; top:6px; left:6px; background:rgba(26,61,26,0.7); color:white; font-size:0.62rem; font-weight:700; border-radius:7px; padding:2px 7px; }
+.card.checked .card-rank { background:var(--gold); color:#1a3d1a; }
+.proof-badge { position:absolute; top:6px; right:6px; background:#27ae60; color:white; font-size:0.6rem; font-weight:700; border-radius:6px; padding:2px 6px; z-index:2; }
+.proof-badge.missing { background:#e05050; }
+.card-body { padding:7px 8px 9px; }
+.card-name { font-size:0.71rem; font-weight:500; line-height:1.3; }
+.card-latin { font-size:0.58rem; color:#aaa; font-style:italic; margin-top:1px; }
+.card-img { width:100%; aspect-ratio:1; object-fit:cover; object-position:center top; display:block; }
+.card-placeholder { width:100%; aspect-ratio:1; display:flex; align-items:center; justify-content:center; font-size:2rem; }
+.badge-neo { position:absolute; bottom:36px; left:6px; background:#e85d04; color:white; font-size:0.55rem; font-weight:700; border-radius:6px; padding:2px 6px; z-index:2; }
+.seen-number { position:absolute; top:6px; left:6px; background:var(--gold); color:#1a3d1a; font-size:0.68rem; font-weight:800; border-radius:8px; padding:2px 8px; z-index:3; }
+.seen-group-badge { position:absolute; bottom:36px; left:0; right:0; color:white; font-size:0.6rem; font-weight:700; padding:3px 6px; text-align:center; text-transform:uppercase; opacity:0.92; }
+
+/* ── CUSTOM ADD ── */
+.add-species-section { margin-top:14px; border-top:2px dashed #ddd; padding-top:12px; }
+.add-species-btn { display:flex; align-items:center; gap:7px; background:transparent; border:2px dashed #bbb; border-radius:12px; padding:9px 16px; font-family:inherit; font-size:0.8rem; color:#aaa; cursor:pointer; transition:all 0.2s; width:100%; justify-content:center; margin-bottom:10px; }
+.add-species-btn:hover { border-color:var(--green-light); color:var(--green); }
+.add-form { background:#f9f9f9; border-radius:12px; padding:14px; margin-bottom:10px; display:none; }
+.add-form.open { display:block; }
+.add-form input { width:100%; border:1.5px solid #ddd; border-radius:8px; padding:7px 10px; font-family:inherit; font-size:0.8rem; margin-bottom:7px; outline:none; }
+.add-form input:focus { border-color:var(--green-light); }
+.add-form-btns { display:flex; gap:8px; }
+.add-form-save { flex:1; background:var(--green); color:white; border:none; border-radius:8px; padding:7px; font-family:inherit; font-size:0.8rem; font-weight:600; cursor:pointer; }
+.add-form-cancel { background:#eee; color:#888; border:none; border-radius:8px; padding:7px 12px; font-family:inherit; font-size:0.8rem; cursor:pointer; }
+.custom-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:9px; margin-top:6px; }
+@media(max-width:600px){ .custom-grid { grid-template-columns:repeat(2,1fr); } }
+.card-custom-del { position:absolute; bottom:4px; right:4px; background:rgba(200,50,50,0.75); color:white; border:none; border-radius:5px; font-size:0.6rem; padding:2px 5px; cursor:pointer; z-index:3; display:none; }
+.card:hover .card-custom-del { display:block; }
+
+/* ── FOTO DIALOG ── */
+.foto-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:3000; align-items:center; justify-content:center; padding:20px; }
+.foto-overlay.show { display:flex; }
+.foto-box { background:white; border-radius:20px; padding:28px; max-width:480px; width:100%; box-shadow:0 24px 80px rgba(0,0,0,0.5); }
+.foto-box h3 { font-size:1.2rem; font-weight:800; color:var(--green-dark); margin-bottom:4px; }
+.foto-box .foto-sub { font-size:0.82rem; color:#888; margin-bottom:18px; }
+.foto-preview { width:100%; aspect-ratio:4/3; border-radius:12px; object-fit:cover; display:none; margin-bottom:12px; border:2px solid #eee; }
+.foto-preview.show { display:block; }
+.foto-placeholder { width:100%; aspect-ratio:4/3; border-radius:12px; background:#f5f5f5; border:2px dashed #ccc; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; color:#aaa; font-size:0.85rem; margin-bottom:12px; cursor:pointer; transition:all 0.2s; }
+.foto-placeholder:hover { border-color:var(--green-light); background:#f0f7f0; color:var(--green); }
+.foto-placeholder .foto-icon { font-size:2.5rem; }
+.foto-actions { display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap; }
+.foto-btn { flex:1; min-width:120px; border:2px solid; border-radius:10px; padding:10px; font-family:inherit; font-size:0.82rem; font-weight:600; cursor:pointer; transition:all 0.2s; display:flex; align-items:center; justify-content:center; gap:6px; }
+.foto-camera-btn { background:#f0f7f0; border-color:var(--green); color:var(--green); }
+.foto-camera-btn:hover { background:var(--green); color:white; }
+.foto-upload-btn { background:#f0f5fb; border-color:#5b8db8; color:#2d5a8a; }
+.foto-upload-btn:hover { background:#2d5a8a; color:white; }
+.foto-confirm-btn { width:100%; background:var(--green-dark); color:white; border:none; border-radius:12px; padding:12px; font-family:inherit; font-size:0.95rem; font-weight:700; cursor:pointer; transition:background 0.2s; }
+.foto-confirm-btn:hover { background:var(--green); }
+.foto-confirm-btn:disabled { background:#ccc; cursor:not-allowed; }
+.foto-skip-btn { width:100%; background:transparent; border:none; color:#aaa; font-family:inherit; font-size:0.78rem; cursor:pointer; margin-top:8px; padding:4px; }
+.foto-skip-btn:hover { color:#888; }
+
+/* ── HIGHSCORE ── */
+.highscore-wrap { max-width:700px; margin:0 auto; }
+.hs-reload-btn { display:flex; align-items:center; gap:8px; background:var(--green-dark); color:white; border:none; border-radius:12px; padding:10px 20px; font-family:inherit; font-size:0.85rem; font-weight:600; cursor:pointer; margin:0 auto 20px; transition:background 0.2s; }
+.hs-reload-btn:hover { background:var(--green); }
+.hs-loading { text-align:center; color:#aaa; padding:40px; font-size:0.9rem; }
+.hs-error { text-align:center; color:#e05050; padding:30px; font-size:0.85rem; background:#fff5f5; border-radius:12px; }
+.hs-table { width:100%; border-collapse:collapse; background:white; border-radius:16px; overflow:hidden; box-shadow:0 4px 20px rgba(0,0,0,0.08); }
+.hs-table th { background:var(--green-dark); color:white; padding:11px 14px; font-size:0.78rem; font-weight:700; text-align:center; }
+.hs-table th:nth-child(2) { text-align:left; }
+.hs-table td { padding:10px 14px; font-size:0.82rem; text-align:center; border-bottom:1px solid #f0f0f0; }
+.hs-table td:nth-child(2) { text-align:left; font-weight:600; }
+.hs-table tr:last-child td { border-bottom:none; }
+.hs-table tr:nth-child(even) { background:#f9f7f3; }
+.hs-table tr.gold   td { background:#fff8dc !important; font-weight:700; }
+.hs-table tr.silver td { background:#f5f5f5 !important; }
+.hs-table tr.bronze td { background:#fff0e0 !important; }
+.hs-table tr.me     td { background:#e8f5e0 !important; outline:2px solid var(--green); }
+.hs-platz { font-weight:800; font-size:1rem; }
+.hs-gesamt { font-weight:800; color:var(--green-dark); font-size:1rem; }
+.hs-my-marker { display:inline-block; background:var(--green); color:white; font-size:0.6rem; border-radius:4px; padding:1px 5px; margin-left:4px; vertical-align:middle; }
+.hs-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:20px; }
+.hs-stat-box { background:white; border-radius:14px; padding:16px; text-align:center; box-shadow:0 2px 10px rgba(0,0,0,0.07); }
+.hs-stat-num { font-size:1.8rem; font-weight:900; color:var(--green-dark); }
+.hs-stat-lbl { font-size:0.72rem; color:#888; margin-top:2px; }
+@media(max-width:500px){ .hs-stats { grid-template-columns:repeat(2,1fr); } .hs-table th:nth-child(n+5), .hs-table td:nth-child(n+5) { display:none; } }
+
+/* ── MISC ── */
+.reset-btn { display:block; margin:10px auto 30px; background:transparent; border:2px solid #ccc; border-radius:30px; padding:8px 26px; font-family:inherit; font-size:0.8rem; color:#aaa; cursor:pointer; transition:all 0.2s; }
+.reset-btn:hover { border-color:var(--green); color:var(--green); }
+footer { text-align:center; font-size:0.68rem; color:#bbb; padding:10px 20px 22px; }
+.congrats { display:none; position:fixed; inset:0; background:rgba(26,61,26,0.93); z-index:1000; align-items:center; justify-content:center; flex-direction:column; gap:18px; text-align:center; padding:30px; }
+.congrats.show { display:flex; }
+.congrats h2 { font-size:2.5rem; color:var(--gold-light); }
+.congrats p { color:#c8e8c8; max-width:400px; line-height:1.6; }
+.congrats-icon { font-size:4rem; animation:spin 4s infinite linear; }
+@keyframes spin { to { transform:rotate(360deg); } }
+.close-btn { background:var(--gold); border:none; border-radius:30px; padding:12px 36px; font-size:1rem; font-weight:600; color:#1a3d1a; cursor:pointer; font-family:inherit; }
+.toast { display:none; position:fixed; bottom:24px; left:50%; transform:translateX(-50%); color:white; padding:12px 24px; border-radius:12px; font-size:0.88rem; font-weight:600; z-index:4000; box-shadow:0 4px 20px rgba(0,0,0,0.3); white-space:nowrap; }
+
+@media print {
+  .header,.tabs,.save-bar,.reset-btn,footer,.section:not(#sec-seen),#sec-seen .sec-header,.add-species-section,.card-overlay,.card-custom-del,.obs-link,button,.login-overlay,.foto-overlay,.toast { display:none !important; }
+  #sec-seen { display:block !important; }
+  .bingo-grid,#seen-grid { display:grid !important; grid-template-columns:repeat(5,1fr) !important; gap:8px !important; }
+  .card { break-inside:avoid; box-shadow:none !important; border:1px solid #ccc !important; }
+  body { background:white !important; }
+  h1.print-title { display:block !important; text-align:center; margin-bottom:16px; }
+}
+h1.print-title { display:none; }
+</style>
+</head>
+<body>
+
+<!-- ── LOGIN ── -->
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-box">
+    <div class="leaf-icon">🌿</div>
+    <h2>Artenbingo Ratingen</h2>
+    <p class="sub">Trage zuerst deinen Namen und deine Klasse ein</p>
+    <div class="login-field">
+      <label>Dein Name</label>
+      <input type="text" id="inputName" placeholder="Vorname Nachname" autocomplete="name">
+    </div>
+    <div class="login-field">
+      <label>Klasse</label>
+      <input type="text" id="inputClass" placeholder="z. B. 7a oder 9c">
+    </div>
+    <button class="login-btn" onclick="startBingo()">🍀 Bingo starten!</button>
+    <p class="login-hint">Dein Fortschritt wird automatisch gespeichert.</p>
+  </div>
+</div>
+
+<!-- ── FOTO DIALOG ── -->
+<div class="foto-overlay" id="fotoOverlay">
+  <div class="foto-box">
+    <h3 id="fotoTitle">📷 Foto als Beweis</h3>
+    <p class="foto-sub" id="fotoSub">Mache ein Foto oder lade eines hoch um die Art zu bestätigen.</p>
+    <img class="foto-preview" id="fotoPreview" alt="Vorschau">
+    <div class="foto-placeholder" id="fotoPlaceholder" onclick="document.getElementById('fotoUploadInput').click()">
+      <span class="foto-icon">📷</span>
+      <span>Hier tippen zum Hochladen</span>
+    </div>
+    <input type="file" id="fotoUploadInput" accept="image/*" capture="environment" style="display:none" onchange="onFotoSelected(event)">
+    <div class="foto-actions">
+      <button class="foto-btn foto-camera-btn" onclick="document.getElementById('fotoUploadInput').click()">📷 Kamera</button>
+      <button class="foto-btn foto-upload-btn" onclick="openFotoGallery()">🖼 Galerie</button>
+    </div>
+    <button class="foto-confirm-btn" id="fotoConfirmBtn" onclick="confirmFoto()" disabled>✓ Art bestätigen</button>
+    <button class="foto-skip-btn" onclick="skipFoto()">Ohne Foto überspringen</button>
+  </div>
+</div>
+
+<!-- ── HEADER ── -->
+<div class="header">
+  <div class="header-inner">
+    <h1>Arten<em>bingo</em></h1>
+    <div class="location">📍 Ratingen · Frühjahr</div>
+    <div class="student-name" id="headerStudentName"></div>
+    <div class="tot-wrap">
+      <div class="tot-bg"><div class="tot-bar" id="totalBar"></div></div>
+      <div class="tot-lbl" id="totalLabel">0 von 0 Arten gefunden</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── SAVE BAR ── -->
+<div class="save-bar">
+  <button class="save-bar-btn save-btn" onclick="saveProgress()">💾 Speichern</button>
+  <button class="save-bar-btn load-btn" onclick="document.getElementById('loadFile').click()">📂 Laden</button>
+  <input type="file" id="loadFile" accept=".json" style="display:none" onchange="loadProgress(event)">
+  <button class="save-bar-btn send-btn" onclick="sendeZumRanking()" id="rankingBtn">📊 Zum Ranking senden</button>
+  <button class="save-bar-btn pdf-btn" onclick="exportPDF()">📄 PDF</button>
+  <span class="save-status" id="saveStatus">—</span>
+</div>
+<h1 class="print-title">Artenbingo Ratingen – Gesehene Arten</h1>
+
+<div class="tabs" id="tabBar"></div>
+<div id="sections"></div>
+<button class="reset-btn" onclick="resetAll()">↺ Fortschritt zurücksetzen</button>
+<footer>Bilder: Wikimedia Commons (CC-Lizenz) · Beobachtungen: observation.org · Standort: Ratingen, NRW</footer>
+
+<div class="congrats" id="congrats">
+  <div class="congrats-icon">🌿</div>
+  <h2>Super!</h2>
+  <p id="congratsText">Alle Arten gefunden!</p>
+  <button class="close-btn" onclick="document.getElementById('congrats').classList.remove('show')">Weiter entdecken ›</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxDu-J5xJM3F-T37nCtPF2o0a7qQ_wIC_Cs2PYrK4CXsPepeAnvE5zghvKckfrZKD1nRw/exec";
+
+let studentName = '';
+let studentClass = '';
+
+// ── LOGIN ──
+function startBingo() {
+  const nameEl  = document.getElementById('inputName');
+  const classEl = document.getElementById('inputClass');
+  const n = nameEl.value.trim();
+  const c = classEl.value.trim();
+  let ok = true;
+  if (!n) { nameEl.classList.add('error');  ok = false; } else nameEl.classList.remove('error');
+  if (!c) { classEl.classList.add('error'); ok = false; } else classEl.classList.remove('error');
+  if (!ok) return;
+  studentName  = n;
+  studentClass = c;
+  document.getElementById('loginOverlay').style.display = 'none';
+  document.getElementById('headerStudentName').textContent = `👤 ${n} · Klasse ${c}`;
+  try { localStorage.setItem('artenbingo_student', JSON.stringify({name:n,class:c})); } catch(e){}
+  buildUI();
+  updateTotalFull();
+  try {
+    const saved = localStorage.getItem('artenbingo_save_ratingen');
+    if (saved) {
+      const data = JSON.parse(saved);
+      if (applySaveData(data)) {
+        const d = new Date(data.timestamp);
+        document.getElementById('saveStatus').textContent = `Auto-geladen vom ${d.toLocaleDateString('de-DE')}`;
+      }
+    }
+  } catch(e) {}
+  loadImages(GROUPS[0].id);
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  try {
+    const st = JSON.parse(localStorage.getItem('artenbingo_student') || 'null');
+    if (st && st.name && st.class) {
+      document.getElementById('inputName').value  = st.name;
+      document.getElementById('inputClass').value = st.class;
+    }
+  } catch(e) {}
+});
+
+// ── DATA ──
+const GROUP_COLORS = {
+  pflanzen:    { bg:"#e8f5e0", accent:"#3a7d44" },
+  baeume:      { bg:"#e0f0e8", accent:"#2d6b4a" },
+  voegel:      { bg:"#e0ecf8", accent:"#3a6ab0" },
+  insekten:    { bg:"#fff8e0", accent:"#c08020" },
+  saeugetiere: { bg:"#ecddf5", accent:"#7050a0" },
+};
+
+const OBS_LINKS = {
+  pflanzen:"https://observation.org/locations/741639/", baeume:"https://observation.org/locations/741639/",
+  voegel:"https://observation.org/locations/741639/",   insekten:"https://observation.org/locations/741639/",
+  saeugetiere:"https://observation.org/locations/741639/",
+};
+
+const GROUPS = [
+  {id:"pflanzen", name:"Pflanzen", subtitle:"Blütenpflanzen & Kräuter", species:[
+    {name:"Wiesen-Löwenzahn",       latin:"Taraxacum officinale",     wiki:"Taraxacum_officinale"},
+    {name:"Große Brennnessel",      latin:"Urtica dioica",            wiki:"Urtica_dioica"},
+    {name:"Gänseblümchen",          latin:"Bellis perennis",          wiki:"Bellis_perennis"},
+    {name:"Gundermann",             latin:"Glechoma hederacea",       wiki:"Glechoma_hederacea"},
+    {name:"Efeu",                   latin:"Hedera helix",             wiki:"Hedera_helix"},
+    {name:"Scharbockskraut",        latin:"Ficaria verna",            wiki:"Ficaria_verna"},
+    {name:"Wohlriechendes Veilchen",latin:"Viola odorata",            wiki:"Viola_odorata"},
+    {name:"Schneeglöckchen",        latin:"Galanthus nivalis",        wiki:"Galanthus_nivalis"},
+    {name:"Huflattich",             latin:"Tussilago farfara",        wiki:"Tussilago_farfara"},
+    {name:"Purpurrote Taubnessel",  latin:"Lamium purpureum",         wiki:"Lamium_purpureum"},
+    {name:"Weiße Taubnessel",       latin:"Lamium album",             wiki:"Lamium_album"},
+    {name:"Persischer Ehrenpreis",  latin:"Veronica persica",         wiki:"Veronica_persica", neo:true},
+    {name:"Knoblauchsrauke",        latin:"Alliaria petiolata",       wiki:"Alliaria_petiolata"},
+    {name:"Wiesenklee",             latin:"Trifolium pratense",       wiki:"Trifolium_pratense"},
+    {name:"Weißklee",               latin:"Trifolium repens",         wiki:"Trifolium_repens"},
+    {name:"Schöllkraut",            latin:"Chelidonium majus",        wiki:"Chelidonium_majus"},
+    {name:"Giersch",                latin:"Aegopodium podagraria",    wiki:"Aegopodium_podagraria"},
+    {name:"Hahnenfuß",              latin:"Ranunculus repens",        wiki:"Ranunculus_repens"},
+    {name:"Günsel",                 latin:"Ajuga reptans",            wiki:"Ajuga_reptans"},
+    {name:"Vogelmiere",             latin:"Stellaria media",          wiki:"Stellaria_media"},
+  ]},
+  {id:"baeume", name:"Bäume & Sträucher", subtitle:"Gehölze", species:[
+    {name:"Stiel-Eiche",            latin:"Quercus robur",            wiki:"Quercus_robur"},
+    {name:"Hainbuche",              latin:"Carpinus betulus",         wiki:"Carpinus_betulus"},
+    {name:"Rotbuche",               latin:"Fagus sylvatica",          wiki:"Fagus_sylvatica"},
+    {name:"Birke",                  latin:"Betula pendula",           wiki:"Betula_pendula"},
+    {name:"Erle",                   latin:"Alnus glutinosa",          wiki:"Alnus_glutinosa"},
+    {name:"Sal-Weide",              latin:"Salix caprea",             wiki:"Salix_caprea"},
+    {name:"Schlehe",                latin:"Prunus spinosa",           wiki:"Prunus_spinosa"},
+    {name:"Hasel",                  latin:"Corylus avellana",         wiki:"Corylus_avellana"},
+    {name:"Holunder",               latin:"Sambucus nigra",           wiki:"Sambucus_nigra"},
+    {name:"Weißdorn",               latin:"Crataegus monogyna",       wiki:"Crataegus_monogyna"},
+    {name:"Feldahorn",              latin:"Acer campestre",           wiki:"Acer_campestre"},
+    {name:"Bergahorn",              latin:"Acer pseudoplatanus",      wiki:"Acer_pseudoplatanus"},
+    {name:"Esche",                  latin:"Fraxinus excelsior",       wiki:"Fraxinus_excelsior"},
+    {name:"Linde",                  latin:"Tilia cordata",            wiki:"Tilia_cordata"},
+    {name:"Kornelkirsche",          latin:"Cornus mas",               wiki:"Cornus_mas"},
+    {name:"Forsythie",              latin:"Forsythia x intermedia",   wiki:"Forsythia"},
+    {name:"Robinie",                latin:"Robinia pseudoacacia",     wiki:"Robinia_pseudoacacia", neo:true},
+    {name:"Japan. Staudenknöterich",latin:"Reynoutria japonica",      wiki:"Reynoutria_japonica", neo:true},
+    {name:"Roteiche",               latin:"Quercus rubra",            wiki:"Quercus_rubra", neo:true},
+    {name:"Rosskastanie",           latin:"Aesculus hippocastanum",   wiki:"Aesculus_hippocastanum"},
+  ]},
+  {id:"voegel", name:"Vögel", subtitle:"Aves", species:[
+    {name:"Amsel",                  latin:"Turdus merula",            wiki:"Turdus_merula"},
+    {name:"Kohlmeise",              latin:"Parus major",              wiki:"Parus_major"},
+    {name:"Blaumeise",              latin:"Cyanistes caeruleus",      wiki:"Cyanistes_caeruleus"},
+    {name:"Rotkehlchen",            latin:"Erithacus rubecula",       wiki:"Erithacus_rubecula"},
+    {name:"Buchfink",               latin:"Fringilla coelebs",        wiki:"Fringilla_coelebs"},
+    {name:"Zilpzalp",               latin:"Phylloscopus collybita",   wiki:"Phylloscopus_collybita"},
+    {name:"Singdrossel",            latin:"Turdus philomelos",        wiki:"Turdus_philomelos"},
+    {name:"Ringeltaube",            latin:"Columba palumbus",         wiki:"Columba_palumbus"},
+    {name:"Elster",                 latin:"Pica pica",                wiki:"Pica_pica"},
+    {name:"Rabenkrähe",             latin:"Corvus corone",            wiki:"Corvus_corone"},
+    {name:"Grünspecht",             latin:"Picus viridis",            wiki:"Picus_viridis"},
+    {name:"Buntspecht",             latin:"Dendrocopos major",        wiki:"Dendrocopos_major"},
+    {name:"Zaunkönig",              latin:"Troglodytes troglodytes",  wiki:"Troglodytes_troglodytes"},
+    {name:"Bachstelze",             latin:"Motacilla alba",           wiki:"Motacilla_alba"},
+    {name:"Mäusebussard",           latin:"Buteo buteo",              wiki:"Buteo_buteo"},
+    {name:"Stockente",              latin:"Anas platyrhynchos",       wiki:"Anas_platyrhynchos"},
+    {name:"Blässhuhn",              latin:"Fulica atra",              wiki:"Fulica_atra"},
+    {name:"Haubentaucher",          latin:"Podiceps cristatus",       wiki:"Podiceps_cristatus"},
+    {name:"Nilgans",                latin:"Alopochen aegyptiaca",     wiki:"Alopochen_aegyptiaca", neo:true},
+    {name:"Eisvogel",               latin:"Alcedo atthis",            wiki:"Alcedo_atthis"},
+  ]},
+  {id:"insekten", name:"Insekten", subtitle:"Bienen, Falter & mehr", species:[
+    {name:"Tagpfauenauge",          latin:"Aglais io",                wiki:"Aglais_io"},
+    {name:"Zitronenfalter",         latin:"Gonepteryx rhamni",        wiki:"Gonepteryx_rhamni"},
+    {name:"Kleiner Fuchs",          latin:"Aglais urticae",           wiki:"Aglais_urticae"},
+    {name:"Erdhummel",              latin:"Bombus terrestris",        wiki:"Bombus_terrestris"},
+    {name:"Honigbiene",             latin:"Apis mellifera",           wiki:"Apis_mellifera"},
+    {name:"Grüne Stinkwanze",       latin:"Palomena prasina",         wiki:"Palomena_prasina"},
+    {name:"Gemeine Feuerwanze",     latin:"Pyrrhocoris apterus",      wiki:"Pyrrhocoris_apterus"},
+    {name:"Siebenpunkt-MK",         latin:"Coccinella septempunctata",wiki:"Coccinella_septempunctata"},
+    {name:"Asiatischer MK",         latin:"Harmonia axyridis",        wiki:"Harmonia_axyridis", neo:true},
+    {name:"Marmorierte Baumwanze",  latin:"Halyomorpha halys",        wiki:"Halyomorpha_halys", neo:true},
+    {name:"C-Falter",               latin:"Polygonia c-album",        wiki:"Polygonia_c-album"},
+    {name:"Aurorafalter",           latin:"Anthocharis cardamines",   wiki:"Anthocharis_cardamines"},
+    {name:"Grünader-Weißling",      latin:"Pieris napi",              wiki:"Pieris_napi"},
+    {name:"Gehörnte Mauerbiene",    latin:"Osmia cornuta",            wiki:"Osmia_cornuta"},
+    {name:"Ackerhummel",            latin:"Bombus pascuorum",         wiki:"Bombus_pascuorum"},
+    {name:"Rostrote Mauerbiene",    latin:"Osmia bicornis",           wiki:"Osmia_bicornis"},
+    {name:"Hainlaufkäfer",          latin:"Carabus nemoralis",        wiki:"Carabus_nemoralis"},
+    {name:"Waldeidechse",           latin:"Zootoca vivipara",         wiki:"Zootoca_vivipara"},
+    {name:"Erdkröte",               latin:"Bufo bufo",                wiki:"Bufo_bufo"},
+    {name:"Grasfrosch",             latin:"Rana temporaria",          wiki:"Rana_temporaria"},
+  ]},
+  {id:"saeugetiere", name:"Säugetiere", subtitle:"Mammalia", species:[
+    {name:"Eichhörnchen",           latin:"Sciurus vulgaris",         wiki:"Sciurus_vulgaris"},
+    {name:"Feldhase",               latin:"Lepus europaeus",          wiki:"Lepus_europaeus"},
+    {name:"Reh",                    latin:"Capreolus capreolus",      wiki:"Capreolus_capreolus"},
+    {name:"Fuchs",                  latin:"Vulpes vulpes",            wiki:"Vulpes_vulpes"},
+    {name:"Maulwurf",               latin:"Talpa europaea",           wiki:"Talpa_europaea"},
+    {name:"Igel",                   latin:"Erinaceus europaeus",      wiki:"Erinaceus_europaeus"},
+    {name:"Zwergfledermaus",        latin:"Pipistrellus pipistrellus",wiki:"Pipistrellus_pipistrellus"},
+    {name:"Steinmarder",            latin:"Martes foina",             wiki:"Martes_foina"},
+    {name:"Nutria",                 latin:"Myocastor coypus",         wiki:"Myocastor_coypus", neo:true},
+    {name:"Wanderratte",            latin:"Rattus norvegicus",        wiki:"Rattus_norvegicus"},
+  ]},
+];
+
+const NEOBIOTA = new Set(GROUPS.flatMap(g => g.species.filter(s=>s.neo).map(s=>s.name)));
+const EMOJIS   = {pflanzen:'🌿', baeume:'🌳', voegel:'🐦', insekten:'🐝', saeugetiere:'🦔'};
+
+// ── STATE ──
+const state        = {};
+const proofPhotos  = {}; // {gid-idx: base64}
+const customSpecies = {};
+GROUPS.forEach(g => {
+  state[g.id]         = new Array(g.species.length).fill(false);
+  customSpecies[g.id] = [];
+});
+const imgCache   = {};
+const checkedLog = [];
+
+// ── FOTO DIALOG ──
+let fotoTarget = null; // {gid, idx}
+let fotoData   = null; // base64
+
+function openFotoDialog(gid, idx) {
+  const g  = GROUPS.find(x=>x.id===gid);
+  const sp = g.species[idx];
+  fotoTarget = {gid, idx};
+  fotoData   = null;
+
+  document.getElementById('fotoTitle').textContent    = `📷 ${sp.name}`;
+  document.getElementById('fotoSub').textContent      = `Mache ein Foto als Beweis für deinen Fund.`;
+  document.getElementById('fotoPreview').classList.remove('show');
+  document.getElementById('fotoPlaceholder').style.display = 'flex';
+  document.getElementById('fotoConfirmBtn').disabled  = true;
+  document.getElementById('fotoUploadInput').value    = '';
+  document.getElementById('fotoUploadInput').removeAttribute('capture');
+  document.getElementById('fotoUploadInput').setAttribute('capture','environment');
+  document.getElementById('fotoOverlay').classList.add('show');
+}
+
+function openFotoGallery() {
+  const inp = document.getElementById('fotoUploadInput');
+  inp.removeAttribute('capture');
+  inp.click();
+}
+
+function onFotoSelected(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    fotoData = e.target.result;
+    const preview = document.getElementById('fotoPreview');
+    preview.src = fotoData;
+    preview.classList.add('show');
+    document.getElementById('fotoPlaceholder').style.display = 'none';
+    document.getElementById('fotoConfirmBtn').disabled = false;
+  };
+  reader.readAsDataURL(file);
+}
+
+function confirmFoto() {
+  if (!fotoData || !fotoTarget) return;
+  const key = `${fotoTarget.gid}-${fotoTarget.idx}`;
+  proofPhotos[key] = fotoData;
+  document.getElementById('fotoOverlay').classList.remove('show');
+  applyCardCheck(fotoTarget.gid, fotoTarget.idx);
+  showToast('📷 Foto gespeichert & Art bestätigt!', '#27ae60');
+}
+
+function skipFoto() {
+  if (!fotoTarget) return;
+  document.getElementById('fotoOverlay').classList.remove('show');
+  applyCardCheck(fotoTarget.gid, fotoTarget.idx);
+  showToast('Art ohne Foto markiert.', '#888');
+}
+
+// ── TOGGLE CARD → öffnet erst Foto-Dialog ──
+function toggleCard(gid, idx) {
+  if (state[gid][idx]) {
+    // Abhaken rückgängig
+    state[gid][idx] = false;
+    delete proofPhotos[`${gid}-${idx}`];
+    const card = document.getElementById(`card-${gid}-${idx}`);
+    if (card) card.classList.remove('checked');
+    updateProofBadge(gid, idx);
+    const logIdx = checkedLog.findLastIndex(e => !e.isCustom && e.groupId===gid && e.speciesIdx===idx);
+    if (logIdx !== -1) { checkedLog.splice(logIdx,1); rebuildSeenPage(); }
+    autoSave(); updateTotalFull(); updateTabFull(gid); updateSecFull(gid); updateSeenCount();
+  } else {
+    // Foto-Dialog öffnen
+    openFotoDialog(gid, idx);
+  }
+}
+
+function applyCardCheck(gid, idx) {
+  state[gid][idx] = true;
+  const card = document.getElementById(`card-${gid}-${idx}`);
+  if (card) card.classList.add('checked');
+  updateProofBadge(gid, idx);
+  const g  = GROUPS.find(x=>x.id===gid);
+  const sp = g.species[idx];
+  let src = null;
+  const cardEl = document.getElementById(`card-${gid}-${idx}`);
+  if (cardEl) { const imgF = cardEl.querySelector('.card-img'); if (imgF) src = imgF.src; }
+  const entry = { name:sp.name, latin:sp.latin, groupName:g.name, groupId:gid,
+                  imgSrc:src, proofKey:`${gid}-${idx}`, timestamp:Date.now(), isCustom:false, speciesIdx:idx };
+  checkedLog.push(entry);
+  addToSeenPage(entry, checkedLog.length-1);
+  autoSave(); updateTotalFull(); updateTabFull(gid); updateSecFull(gid); updateSeenCount();
+  if (state[gid].every(Boolean) && customSpecies[gid].every(x=>x.checked)) {
+    document.getElementById('congratsText').textContent = `Alle ${g.name} in Ratingen gefunden! 🎉`;
+    document.getElementById('congrats').classList.add('show');
+  }
+}
+
+function updateProofBadge(gid, idx) {
+  const card = document.getElementById(`card-${gid}-${idx}`);
+  if (!card) return;
+  let badge = card.querySelector('.proof-badge');
+  if (state[gid][idx]) {
+    if (!badge) { badge = document.createElement('div'); badge.className='proof-badge'; card.appendChild(badge); }
+    const hasProof = !!proofPhotos[`${gid}-${idx}`];
+    badge.textContent = hasProof ? '📷' : '⚠';
+    badge.className   = hasProof ? 'proof-badge' : 'proof-badge missing';
+  } else {
+    if (badge) badge.remove();
+  }
+}
+
+// ── IMAGE LOADING ──
+async function getWikiImg(wikiName) {
+  if (imgCache[wikiName] !== undefined) return imgCache[wikiName];
+  try {
+    const r = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(wikiName)}`);
+    if (!r.ok) throw 0;
+    const d   = await r.json();
+    const src = d.thumbnail?.source || null;
+    return imgCache[wikiName] = src ? src.replace(/\/\d+px-/,'/400px-') : null;
+  } catch { return imgCache[wikiName] = null; }
+}
+
+async function loadImages(gid) {
+  const g = GROUPS.find(x=>x.id===gid);
+  if (!g) return;
+  for (let i=0; i<g.species.length; i++) {
+    const el = document.getElementById(`img-${gid}-${i}`);
+    if (!el || el.dataset.loaded) continue;
+    const src = await getWikiImg(g.species[i].wiki);
+    if (src) {
+      const img = document.createElement('img');
+      img.src=src; img.className='card-img'; img.alt=g.species[i].name;
+      updateSeenCardImg(gid,i,src); el.replaceWith(img);
+    } else el.dataset.loaded='true';
+  }
+}
+
+function updateSeenCardImg(gid, idx, src) {
+  checkedLog.forEach((entry, logIdx) => {
+    if (!entry.isCustom && entry.groupId===gid && entry.speciesIdx===idx) {
+      entry.imgSrc = src;
+      const sc = document.getElementById(`seen-card-${logIdx}`);
+      if (!sc) return;
+      const ph = sc.querySelector('.card-placeholder');
+      if (ph) { const img=document.createElement('img'); img.src=src; img.className='card-img'; img.alt=entry.name; ph.replaceWith(img); }
+      else { const ei=sc.querySelector('.card-img'); if(ei) ei.src=src; }
+    }
+  });
+}
+
+// ── PROGRESS ──
+function getTotWithCustom() {
+  return Object.values(state).flat().filter(Boolean).length
+       + Object.values(customSpecies).reduce((s,a)=>s+a.filter(x=>x.checked).length,0);
+}
+function updateTotalFull() {
+  const t=getTotWithCustom(), maxBase=GROUPS.reduce((s,g)=>s+g.species.length,0);
+  const maxAll=maxBase+Object.values(customSpecies).reduce((s,a)=>s+a.length,0);
+  document.getElementById('totalBar').style.width=(t/maxAll*100)+'%';
+  document.getElementById('totalLabel').textContent=`${t} von ${maxAll} Arten gefunden`;
+}
+function updateTabFull(gid) {
+  const btn=document.getElementById('tab-'+gid); if(!btn) return;
+  const g=GROUPS.find(x=>x.id===gid), maxBase=g?g.species.length:0;
+  const c=state[gid].filter(Boolean).length+customSpecies[gid].filter(x=>x.checked).length;
+  btn.querySelector('.tab-count').textContent=`${c}/${maxBase+customSpecies[gid].length}`;
+  btn.classList.toggle('complete', c===maxBase+customSpecies[gid].length && maxBase>0);
+}
+function updateSecFull(gid) {
+  const g=GROUPS.find(x=>x.id===gid), maxBase=g?g.species.length:0;
+  const c=state[gid].filter(Boolean).length+customSpecies[gid].filter(x=>x.checked).length;
+  const maxAll=maxBase+customSpecies[gid].length;
+  const bar=document.getElementById('secBar-'+gid), lbl=document.getElementById('secLbl-'+gid);
+  if(bar) bar.style.width=(c/maxAll*100)+'%';
+  if(lbl) lbl.textContent=`${c}/${maxAll}`;
+}
+function updateSeenCount() {
+  const el=document.getElementById('seenCount'); if(el) el.textContent=checkedLog.length+' Arten';
+}
+
+// ── CUSTOM SPECIES ──
+function toggleCustomCard(gid,idx) {
+  const sp=customSpecies[gid][idx]; sp.checked=!sp.checked;
+  const card=document.getElementById(`custom-card-${gid}-${idx}`); if(card) card.classList.toggle('checked',sp.checked);
+  const g=GROUPS.find(x=>x.id===gid);
+  if(sp.checked) { const entry={name:sp.name,latin:sp.latin||'',groupName:g.name,groupId:gid,imgSrc:sp.imgSrc||null,timestamp:Date.now(),isCustom:true,customIdx:idx}; checkedLog.push(entry); addToSeenPage(entry,checkedLog.length-1); }
+  else { const li=checkedLog.findLastIndex(e=>e.isCustom&&e.groupId===gid&&e.name===sp.name); if(li!==-1){checkedLog.splice(li,1);rebuildSeenPage();} }
+  autoSave(); updateTotalFull(); updateTabFull(gid); updateSecFull(gid); updateSeenCount();
+}
+function deleteCustomCard(gid,idx) {
+  const sp=customSpecies[gid][idx];
+  if(sp.checked){const li=checkedLog.findLastIndex(e=>e.isCustom&&e.groupId===gid&&e.name===sp.name);if(li!==-1){checkedLog.splice(li,1);rebuildSeenPage();}}
+  customSpecies[gid].splice(idx,1); renderCustomGrid(gid);
+  updateTotalFull(); updateTabFull(gid); updateSecFull(gid); updateSeenCount(); autoSave();
+}
+function renderCustomGrid(gid) {
+  const grid=document.getElementById('custom-grid-'+gid), addBtn=document.getElementById('add-btn-'+gid);
+  if(!grid) return; grid.innerHTML='';
+  const col=GROUP_COLORS[gid]||{bg:'#eee',accent:'#555'};
+  customSpecies[gid].forEach((sp,i)=>{
+    const card=document.createElement('div'); card.className='card'+(sp.checked?' checked':''); card.id=`custom-card-${gid}-${i}`; card.onclick=()=>toggleCustomCard(gid,i);
+    const ph=document.createElement('div'); ph.className='card-placeholder'; ph.style.background=col.bg; ph.textContent='✏️'; card.appendChild(ph);
+    const ov=document.createElement('div'); ov.className='card-overlay'; const ck=document.createElement('div'); ck.className='checkmark'; ck.textContent='✓'; ov.appendChild(ck); card.appendChild(ov);
+    const body=document.createElement('div'); body.className='card-body'; body.innerHTML=`<div class="card-name">${sp.name}</div><div class="card-latin">${sp.latin||'eigene Art'}</div>`; card.appendChild(body);
+    const del=document.createElement('button'); del.className='card-custom-del'; del.textContent='✕'; del.onclick=(e)=>{e.stopPropagation();deleteCustomCard(gid,i);}; card.appendChild(del);
+    grid.appendChild(card);
+  });
+  if(addBtn) addBtn.style.display=customSpecies[gid].length>=5?'none':'flex';
+}
+function toggleAddForm(gid){document.getElementById('add-form-'+gid).classList.toggle('open');}
+function saveCustomSpecies(gid){
+  const n=document.getElementById('add-name-'+gid), l=document.getElementById('add-latin-'+gid), im=document.getElementById('add-img-'+gid);
+  if(!n.value.trim()){n.style.borderColor='red';return;}
+  customSpecies[gid].push({name:n.value.trim(),latin:l.value.trim(),imgSrc:im.value.trim(),checked:false});
+  n.value='';l.value='';im.value=''; document.getElementById('add-form-'+gid).classList.remove('open');
+  renderCustomGrid(gid); updateTotalFull(); updateTabFull(gid); updateSecFull(gid); autoSave();
+}
+
+// ── SEEN PAGE ──
+function makeSeenCard(entry,logIdx){
+  const col=GROUP_COLORS[entry.groupId]||{bg:'#eee',accent:'#555'};
+  const card=document.createElement('div'); card.className='card seen-card'; card.id=`seen-card-${logIdx}`;
+  const num=document.createElement('div'); num.className='seen-number'; num.textContent=logIdx+1; card.appendChild(num);
+  // show proof photo if available, else wiki img
+  const proofSrc = entry.proofKey ? proofPhotos[entry.proofKey] : null;
+  const imgSrc   = proofSrc || entry.imgSrc;
+  if(imgSrc){const img=document.createElement('img');img.className='card-img';img.src=imgSrc;img.alt=entry.name;card.appendChild(img);}
+  else{const ph=document.createElement('div');ph.className='card-placeholder';ph.style.background=col.bg;ph.textContent=EMOJIS[entry.groupId]||'🌿';card.appendChild(ph);}
+  if(proofSrc){const pb=document.createElement('div');pb.className='proof-badge';pb.textContent='📷';card.appendChild(pb);}
+  const gb=document.createElement('div');gb.className='seen-group-badge';gb.style.background=col.accent;gb.textContent=entry.groupName;card.appendChild(gb);
+  if(NEOBIOTA.has(entry.name)){const neo=document.createElement('div');neo.className='badge-neo';neo.textContent='🌍 Neobiont';card.appendChild(neo);}
+  const body=document.createElement('div');body.className='card-body';body.innerHTML=`<div class="card-name">${entry.name}</div><div class="card-latin">${entry.latin}</div>`;card.appendChild(body);
+  return card;
+}
+function addToSeenPage(entry,logIdx){
+  const grid=document.getElementById('seen-grid'); if(!grid) return;
+  document.getElementById('seen-empty').style.display='none'; grid.appendChild(makeSeenCard(entry,logIdx));
+}
+function rebuildSeenPage(){
+  const grid=document.getElementById('seen-grid'); if(!grid) return; grid.innerHTML='';
+  document.getElementById('seen-empty').style.display=checkedLog.length===0?'block':'none';
+  checkedLog.forEach((e,i)=>grid.appendChild(makeSeenCard(e,i))); updateSeenCount();
+}
+
+// ── HIGHSCORE ──
+async function loadHighscore() {
+  const wrap = document.getElementById('highscoreContent');
+  wrap.innerHTML = '<div class="hs-loading">⏳ Lade Ranking…</div>';
+  try {
+    const r = await fetch(WEBAPP_URL + '?action=ranking');
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const data = await r.json();
+    if (data.status !== 'ok') throw new Error(data.message || 'Fehler');
+    renderHighscore(data.rows);
+  } catch(e) {
+    wrap.innerHTML = `<div class="hs-error">❌ Ranking konnte nicht geladen werden.<br><small>${e.message}</small><br><br><button class="hs-reload-btn" onclick="loadHighscore()">🔄 Nochmal versuchen</button></div>`;
+  }
+}
+
+function renderHighscore(rows) {
+  const wrap = document.getElementById('highscoreContent');
+  if (!rows || rows.length === 0) {
+    wrap.innerHTML = '<div class="hs-loading">Noch keine Einträge. Seid die Ersten! 🌿</div>'; return;
+  }
+  rows.sort((a,b) => b.gesamt - a.gesamt);
+
+  const max  = rows[0].gesamt;
+  const avg  = (rows.reduce((s,r)=>s+r.gesamt,0)/rows.length).toFixed(1);
+  const myRow = rows.find(r => r.name === studentName && r.klasse === studentClass);
+  const myPlatz = myRow ? rows.indexOf(myRow)+1 : null;
+
+  let html = `<button class="hs-reload-btn" onclick="loadHighscore()">🔄 Aktualisieren</button>
+  <div class="hs-stats">
+    <div class="hs-stat-box"><div class="hs-stat-num">${rows.length}</div><div class="hs-stat-lbl">Teilnehmer</div></div>
+    <div class="hs-stat-box"><div class="hs-stat-num">${max}</div><div class="hs-stat-lbl">Höchste Punktzahl</div></div>
+    <div class="hs-stat-box"><div class="hs-stat-num">${avg}</div><div class="hs-stat-lbl">Ø Punkte</div></div>
+  </div>
+  ${myRow ? `<div style="background:#e8f5e0;border-radius:12px;padding:12px 16px;margin-bottom:16px;font-size:0.85rem;font-weight:600;color:var(--green-dark);">
+    🏅 Du bist auf Platz <strong>${myPlatz}</strong> von ${rows.length} mit <strong>${myRow.gesamt} Punkten</strong>!
+  </div>` : ''}
+  <table class="hs-table">
+    <thead><tr>
+      <th>Platz</th><th>Name</th><th>Klasse</th>
+      <th>🌿</th><th>🌳</th><th>🐦</th><th>🐝</th><th>🦔</th><th>⭐</th>
+    </tr></thead><tbody>`;
+
+  rows.forEach((r,i) => {
+    const platz = i+1;
+    const medal = platz===1?'🥇':platz===2?'🥈':platz===3?'🥉':platz;
+    const isMe  = r.name===studentName && r.klasse===studentClass;
+    const cls   = isMe?'me':platz===1?'gold':platz===2?'silver':platz===3?'bronze':'';
+    const meTag = isMe?'<span class="hs-my-marker">Du</span>':'';
+    html += `<tr class="${cls}">
+      <td class="hs-platz">${medal}</td>
+      <td>${r.name}${meTag}</td>
+      <td>${r.klasse}</td>
+      <td>${r.pflanzen||0}</td><td>${r.baeume||0}</td><td>${r.voegel||0}</td>
+      <td>${r.insekten||0}</td><td>${r.saeugetiere||0}</td>
+      <td class="hs-gesamt">${r.gesamt}</td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+}
+
+// ── NAVIGATION ──
+function switchTab(id) {
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  document.getElementById('sec-'+id).classList.add('active');
+  if (id === 'highscore') loadHighscore();
+  else loadImages(id);
+}
+function showSeenPage() { switchTab('seen'); }
+
+// ── RESET ──
+function resetAll() {
+  if(!confirm('Alle Fortschritte zurücksetzen?')) return;
+  GROUPS.forEach(g=>{
+    state[g.id]=new Array(g.species.length).fill(false);
+    for(let i=0;i<g.species.length;i++){const c=document.getElementById(`card-${g.id}-${i}`);if(c)c.classList.remove('checked');}
+    customSpecies[g.id].forEach((_,i)=>{customSpecies[g.id][i].checked=false;const c=document.getElementById(`custom-card-${g.id}-${i}`);if(c)c.classList.remove('checked');});
+    updateTabFull(g.id); updateSecFull(g.id);
+  });
+  Object.keys(proofPhotos).forEach(k=>delete proofPhotos[k]);
+  checkedLog.length=0; rebuildSeenPage(); updateTotalFull(); updateSeenCount();
+  localStorage.removeItem('artenbingo_save_ratingen');
+  document.getElementById('saveStatus').textContent='Fortschritt zurückgesetzt';
+}
+
+// ── SAVE / LOAD ──
+function buildSaveData() {
+  return { version:3, timestamp:new Date().toISOString(), studentName, studentClass,
+           state:Object.fromEntries(GROUPS.map(g=>[g.id,[...state[g.id]]])),
+           customSpecies:Object.fromEntries(GROUPS.map(g=>[g.id,customSpecies[g.id]])),
+           proofPhotos, checkedLog };
+}
+function applySaveData(data) {
+  if(!data||data.version<1) return false;
+  GROUPS.forEach(g=>{
+    if(data.state&&data.state[g.id]) data.state[g.id].forEach((v,i)=>{if(i<state[g.id].length)state[g.id][i]=v;});
+    if(data.customSpecies&&data.customSpecies[g.id]){customSpecies[g.id]=data.customSpecies[g.id];renderCustomGrid(g.id);}
+  });
+  if(data.proofPhotos) Object.assign(proofPhotos, data.proofPhotos);
+  checkedLog.length=0; (data.checkedLog||[]).forEach(e=>checkedLog.push(e));
+  GROUPS.forEach(g=>{
+    g.species.forEach((_,i)=>{const c=document.getElementById(`card-${g.id}-${i}`);if(c)c.classList.toggle('checked',state[g.id][i]);updateProofBadge(g.id,i);});
+    updateTabFull(g.id); updateSecFull(g.id);
+  });
+  rebuildSeenPage(); updateTotalFull(); updateSeenCount(); return true;
+}
+function autoSave(){
+  try{localStorage.setItem('artenbingo_save_ratingen',JSON.stringify(buildSaveData()));
+  const now=new Date();document.getElementById('saveStatus').textContent=`Auto-gespeichert ${now.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})}`;}catch(e){}
+}
+function saveProgress(){
+  const data=buildSaveData();
+  try{localStorage.setItem('artenbingo_save_ratingen',JSON.stringify(data));}catch(e){}
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download=`artenbingo_${studentName.replace(/\s/g,'_')}_${new Date().toISOString().slice(0,10)}.json`;a.click();
+  document.getElementById('saveStatus').textContent=`Gespeichert ${new Date().toLocaleDateString('de-DE')}`;
+}
+function loadProgress(event){
+  const file=event.target.files[0];if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{try{const data=JSON.parse(e.target.result);if(applySaveData(data)){document.getElementById('saveStatus').textContent=`Geladen: ${file.name}`;}else alert('Ungültige Speicherdatei.');}catch{alert('Fehler beim Laden.');}event.target.value='';};
+  reader.readAsText(file);
+}
+
+// ── SENDEN ──
+async function sendeZumRanking() {
+  if(!studentName||!studentClass){showToast('❌ Bitte zuerst Name und Klasse eintragen.','#c0392b');return;}
+  const btn=document.getElementById('rankingBtn');
+  btn.textContent='⏳ Wird gesendet…'; btn.disabled=true;
+  const counts={};
+  GROUPS.forEach(g=>{ counts[g.id]=state[g.id].filter(Boolean).length+customSpecies[g.id].filter(x=>x.checked).length; });
+  const payload={name:studentName,klasse:studentClass,pflanzen:counts.pflanzen||0,baeume:counts.baeume||0,voegel:counts.voegel||0,insekten:counts.insekten||0,saeugetiere:counts.saeugetiere||0,gesamt:getTotWithCustom()};
+  try{
+    const r=await fetch(WEBAPP_URL,{method:'POST',body:JSON.stringify(payload)});
+    const res=await r.json();
+    if(res.status==='ok'){showToast('✅ Ergebnis gesendet! Du bist jetzt im Ranking.','#27ae60');}
+    else showToast('❌ Fehler: '+res.message,'#c0392b');
+  }catch(e){showToast('❌ Verbindungsfehler. Nochmal versuchen.','#c0392b');}
+  btn.textContent='📊 Zum Ranking senden'; btn.disabled=false;
+}
+
+function exportPDF(){showSeenPage();setTimeout(()=>window.print(),300);}
+
+function showToast(msg,bg){
+  const t=document.getElementById('toast');t.textContent=msg;t.style.background=bg||'#1a3d1a';t.style.display='block';
+  setTimeout(()=>t.style.display='none',3500);
+}
+
+// ── BUILD UI ──
+function buildUI() {
+  const tabBar=document.getElementById('tabBar'), secEl=document.getElementById('sections');
+
+  GROUPS.forEach((g,gi)=>{
+    const col=GROUP_COLORS[g.id]||{bg:'#eee',accent:'#555'};
+    const emoji=EMOJIS[g.id]||'🍃';
+
+    // Tab
+    const btn=document.createElement('button');
+    btn.className='tab-btn'+(gi===0?' active':''); btn.id='tab-'+g.id; btn.onclick=()=>switchTab(g.id);
+    const tSpan=document.createElement('span');tSpan.className='tab-count';tSpan.textContent='0/'+g.species.length;
+    btn.innerHTML=`${emoji} ${g.name} `; btn.appendChild(tSpan); tabBar.appendChild(btn);
+
+    // Section
+    const sec=document.createElement('div');sec.className='section'+(gi===0?' active':'');sec.id='sec-'+g.id;
+
+    // Header
+    const sh=document.createElement('div');sh.className='sec-header';sh.style.borderLeft='5px solid '+col.accent;
+    const sE=document.createElement('div');
+    sE.style.cssText=`width:62px;height:62px;border-radius:50%;background:${col.bg};display:flex;align-items:center;justify-content:center;font-size:2rem;flex-shrink:0;box-shadow:0 2px 10px rgba(0,0,0,0.15)`;
+    sE.textContent=emoji;
+    const sinfo=document.createElement('div');sinfo.className='sec-info';
+    sinfo.innerHTML=`<div class="sec-title">${emoji} ${g.name}</div>
+      <div class="sec-sub">Ratingen · ${g.subtitle}</div>
+      <div class="sec-prog-wrap"><div class="sec-prog-bg"><div class="sec-prog-bar" id="secBar-${g.id}" style="background:${col.accent}"></div></div><div class="sec-prog-txt" id="secLbl-${g.id}">0/${g.species.length}</div></div>
+      <a class="obs-link" href="${OBS_LINKS[g.id]}" target="_blank" style="color:${col.accent};border-color:${col.accent}" onmouseover="this.style.background='${col.accent}';this.style.color='white'" onmouseout="this.style.background='';this.style.color='${col.accent}'">🔗 observation.org – Ratingen</a>`;
+    sh.appendChild(sE);sh.appendChild(sinfo);sec.appendChild(sh);
+
+    // Grid
+    const grid=document.createElement('div');grid.className='bingo-grid';grid.id='grid-'+g.id;sec.appendChild(grid);
+
+    // Custom
+    const cs=document.createElement('div');cs.className='add-species-section';
+    cs.innerHTML=`<div class="custom-grid" id="custom-grid-${g.id}"></div>
+      <div class="add-form" id="add-form-${g.id}">
+        <input type="text" id="add-name-${g.id}" placeholder="Artname (Pflichtfeld)">
+        <input type="text" id="add-latin-${g.id}" placeholder="Wissenschaftlicher Name (optional)">
+        <input type="text" id="add-img-${g.id}" placeholder="Foto-URL (optional)">
+        <div class="add-form-btns">
+          <button class="add-form-save" onclick="saveCustomSpecies('${g.id}')">✓ Speichern</button>
+          <button class="add-form-cancel" onclick="toggleAddForm('${g.id}')">Abbrechen</button>
+        </div>
+      </div>
+      <button class="add-species-btn" id="add-btn-${g.id}" onclick="toggleAddForm('${g.id}')">＋ Eigene Art <span style="font-size:0.7rem;opacity:0.6">(max. 5)</span></button>`;
+    sec.appendChild(cs);secEl.appendChild(sec);
+
+    // Cards
+    g.species.forEach((sp,i)=>{
+      const card=document.createElement('div');card.className='card';card.id=`card-${g.id}-${i}`;card.onclick=()=>toggleCard(g.id,i);
+      const ph=document.createElement('div');ph.className='card-placeholder';ph.id=`img-${g.id}-${i}`;ph.style.background=col.bg;ph.textContent=emoji;card.appendChild(ph);
+      const ov=document.createElement('div');ov.className='card-overlay';const ck=document.createElement('div');ck.className='checkmark';ck.textContent='✓';ov.appendChild(ck);card.appendChild(ov);
+      const rk=document.createElement('div');rk.className='card-rank';rk.textContent='#'+(i+1);card.appendChild(rk);
+      if(sp.neo||NEOBIOTA.has(sp.name)){const neo=document.createElement('div');neo.className='badge-neo';neo.textContent='🌍 Neobiont';card.appendChild(neo);}
+      const body=document.createElement('div');body.className='card-body';body.innerHTML=`<div class="card-name">${sp.name}</div><div class="card-latin">${sp.latin}</div>`;card.appendChild(body);
+      grid.appendChild(card);
+    });
+  });
+
+  // Seen tab
+  const seenBtn=document.createElement('button');seenBtn.className='tab-btn tab-btn-special';seenBtn.id='tab-seen';seenBtn.onclick=()=>switchTab('seen');
+  seenBtn.innerHTML='🔭 Gesehen <span class="tab-count" id="seenCount">0 Arten</span>';tabBar.appendChild(seenBtn);
+
+  // Highscore tab
+  const hsBtn=document.createElement('button');hsBtn.className='tab-btn tab-btn-highscore';hsBtn.id='tab-highscore';hsBtn.onclick=()=>switchTab('highscore');
+  hsBtn.innerHTML='🏆 Highscore';tabBar.appendChild(hsBtn);
+
+  // Seen section
+  const seenSec=document.createElement('div');seenSec.className='section';seenSec.id='sec-seen';
+  seenSec.innerHTML=`<div class="sec-header" style="border-left:5px solid var(--green)"><div class="sec-info"><div class="sec-title">🔭 Gesehene Arten</div><div class="sec-sub">In der Reihenfolge deiner Entdeckungen · Ratingen</div></div></div>
+    <p id="seen-empty" style="text-align:center;color:#aaa;padding:40px;font-size:0.9rem;">Noch keine Arten abgehakt.</p>
+    <div class="bingo-grid" id="seen-grid"></div>`;
+  secEl.appendChild(seenSec);
+
+  // Highscore section
+  const hsSec=document.createElement('div');hsSec.className='section';hsSec.id='sec-highscore';
+  hsSec.innerHTML=`<div class="sec-header" style="border-left:5px solid var(--gold)"><div class="sec-info"><div class="sec-title">🏆 Highscore – Ratingen</div><div class="sec-sub">Live-Ranking aller Teilnehmer</div></div></div>
+    <div class="highscore-wrap"><div id="highscoreContent"><div class="hs-loading">Klicke auf den Tab um das Ranking zu laden…</div></div></div>`;
+  secEl.appendChild(hsSec);
+}
+</script>
+</body>
+</html>
