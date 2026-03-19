@@ -256,7 +256,7 @@ h1.print-title { display:none; }
   <button class="save-bar-btn save-btn" onclick="saveProgress()">💾 Speichern</button>
   <button class="save-bar-btn load-btn" onclick="document.getElementById('loadFile').click()">📂 Laden</button>
   <input type="file" id="loadFile" accept=".json" style="display:none" onchange="loadProgress(event)">
-  <button class="save-bar-btn sheets-btn" onclick="showSheetsModal()">📊 Ranking exportieren</button>
+  <button class="save-bar-btn sheets-btn" onclick="sendeZumRanking()" id="rankingBtn">📊 Zum Ranking senden</button>
   <button class="save-bar-btn pdf-btn" onclick="exportPDF()">📄 PDF</button>
   <span class="save-status" id="saveStatus">Zuletzt gespeichert: —</span>
 </div>
@@ -275,29 +275,13 @@ h1.print-title { display:none; }
   <button class="close-btn" onclick="document.getElementById('congrats').classList.remove('show')">Weiter entdecken ›</button>
 </div>
 
-<!-- ── RANKING / SHEETS MODAL ── -->
-<div class="modal-overlay" id="sheetsModal">
-  <div class="modal-box">
-    <h3>📊 Ranking exportieren</h3>
-    <p class="modal-sub">Exportiere deinen Fortschritt für das Google Sheets Ranking</p>
-    <div class="sheets-instructions">
-      <strong>So funktioniert es:</strong><br>
-      1. Lade die CSV-Datei herunter oder kopiere die Zeile<br>
-      2. Öffne dein Google Sheets Ranking-Dokument<br>
-      3. Füge die Daten in die nächste freie Zeile ein<br>
-      4. Spalten: <code>Name</code> | <code>Klasse</code> | <code>Datum</code> | <code>Pflanzen</code> | <code>Vögel</code> | <code>Insekten</code> | <code>Säugetiere</code> | <code>Gesamt</code>
-    </div>
-    <div class="sheets-formula-box" id="sheetsFormulaBox">Wird geladen...</div>
-    <button class="copy-formula-btn" onclick="copyExportRow()">📋 Zeile kopieren</button>
-    <button class="dl-csv-btn" onclick="downloadCSV()">⬇ CSV herunterladen</button>
-    <br><br>
-    <strong style="font-size:0.82rem;color:#555;">Vorschau CSV-Inhalt:</strong>
-    <div class="csv-preview" id="csvPreview">Wird geladen...</div>
-    <button class="modal-close" onclick="document.getElementById('sheetsModal').classList.remove('show')">Schließen</button>
-  </div>
-</div>
+<!-- ── RANKING STATUS TOAST ── -->
+<div id="rankingToast" style="display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a3d1a;color:white;padding:12px 24px;border-radius:12px;font-size:0.88rem;font-weight:600;z-index:2000;box-shadow:0 4px 20px rgba(0,0,0,0.3);"></div>
 
 <script>
+// ── WEB-APP URL – hier deine Google Apps Script URL eintragen ──
+const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxDu-J5xJM3F-T37nCtPF2o0a7qQ_wIC_Cs2PYrK4CXsPepeAnvE5zghvKckfrZKD1nRw/exec";
+
 // ── STUDENT DATA ──
 let studentName = '';
 let studentClass = '';
@@ -822,53 +806,64 @@ function loadProgress(event) {
   reader.readAsText(file);
 }
 
-// ── GOOGLE SHEETS / RANKING EXPORT ──
-function buildExportRow() {
-  const date = new Date().toLocaleDateString('de-DE');
+// ── GOOGLE SHEETS WEB APP URL ──
+// Trage hier deine Web-App-URL ein nach dem Bereitstellen in Apps Script:
+const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxDu-J5xJM3F-T37nCtPF2o0a7qQ_wIC_Cs2PYrK4CXsPepeAnvE5zghvKckfrZKD1nRw/exec";
+
+// ── DIREKT ZUM RANKING SENDEN ──
+async function sendeZumRanking() {
+  if (!studentName || !studentClass) {
+    showToast("❌ Bitte zuerst Name und Klasse eintragen.", "#c0392b"); return;
+  }
+  if (WEBAPP_URL === "https://script.google.com/macros/s/AKfycbxDu-J5xJM3F-T37nCtPF2o0a7qQ_wIC_Cs2PYrK4CXsPepeAnvE5zghvKckfrZKD1nRw/exec") {
+    showToast("❌ Bitte zuerst die Web-App-URL im HTML eintragen.", "#c0392b"); return;
+  }
+
+  const btn = document.getElementById('rankingBtn');
+  btn.textContent = "⏳ Wird gesendet...";
+  btn.disabled = true;
+
   const counts = {};
   GROUPS.forEach(g => {
     counts[g.id] = state[g.id].filter(Boolean).length + customSpecies[g.id].filter(x=>x.checked).length;
   });
-  const total = getTotWithCustom();
-  return { date, counts, total };
+
+  const payload = {
+    name:       studentName,
+    klasse:     studentClass,
+    pflanzen:   counts["pflanzen"]    || 0,
+    baeume:     counts["baeume"]      || 0,
+    voegel:     counts["voegel"]      || 0,
+    insekten:   counts["insekten"]    || 0,
+    saeugetiere:counts["saeugetiere"] || 0,
+    gesamt:     getTotWithCustom()
+  };
+
+  try {
+    const response = await fetch(WEBAPP_URL, {
+      method: "POST",
+      body: JSON.stringify(payload)
+    });
+    const result = await response.json();
+    if (result.status === "ok") {
+      showToast("✅ Ergebnis erfolgreich gesendet! Du bist jetzt im Ranking.", "#1a3d1a");
+    } else {
+      showToast("❌ Fehler: " + result.message, "#c0392b");
+    }
+  } catch(err) {
+    showToast("❌ Verbindungsfehler. Bitte nochmal versuchen.", "#c0392b");
+  }
+
+  btn.textContent = "📊 Zum Ranking senden";
+  btn.disabled = false;
 }
 
-function showSheetsModal() {
-  const { date, counts, total } = buildExportRow();
-  const cols = GROUPS.map(g => counts[g.id]);
-
-  // CSV header and data row
-  const header = `Name,Klasse,Datum,${GROUPS.map(g=>g.name).join(',')},Gesamt`;
-  const row = `"${studentName}","${studentClass}","${date}",${cols.join(',')},${total}`;
-  const csv = header + '\n' + row;
-
-  document.getElementById('sheetsFormulaBox').textContent = row;
-  document.getElementById('csvPreview').textContent = csv;
-  document.getElementById('sheetsModal').classList.add('show');
-}
-
-function copyExportRow() {
-  const { date, counts, total } = buildExportRow();
-  const cols = GROUPS.map(g => counts[g.id]);
-  const row = `"${studentName}"\t"${studentClass}"\t"${date}"\t${cols.join('\t')}\t${total}`;
-  navigator.clipboard.writeText(row).then(() => {
-    const btn = document.querySelector('.copy-formula-btn');
-    btn.textContent = '✓ Kopiert!';
-    setTimeout(()=>btn.textContent='📋 Zeile kopieren', 2000);
-  }).catch(()=>alert('Bitte die Zeile manuell kopieren.'));
-}
-
-function downloadCSV() {
-  const { date, counts, total } = buildExportRow();
-  const cols = GROUPS.map(g => counts[g.id]);
-  const header = `Name,Klasse,Datum,${GROUPS.map(g=>g.name).join(',')},Gesamt`;
-  const row = `"${studentName}","${studentClass}","${date}",${cols.join(',')},${total}`;
-  const csv = '\uFEFF' + header + '\n' + row; // BOM for Excel
-  const blob = new Blob([csv], {type:'text/csv;charset=utf-8'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `ranking_${studentName.replace(/\s/g,'_')}_${date.replace(/\./g,'-')}.csv`;
-  a.click();
+function showToast(msg, bg) {
+  const t = document.getElementById('rankingToast');
+  t.textContent = msg;
+  t.style.background = bg || "#1a3d1a";
+  t.style.display = "block";
+  setTimeout(() => t.style.display = "none", 4000);
 }
 
 // ── PDF EXPORT ──
