@@ -806,17 +806,12 @@ function loadProgress(event) {
   reader.readAsText(file);
 }
 
-// ── GOOGLE SHEETS WEB APP URL ──
-// Trage hier deine Web-App-URL ein nach dem Bereitstellen in Apps Script:
-const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxDu-J5xJM3F-T37nCtPF2o0a7qQ_wIC_Cs2PYrK4CXsPepeAnvE5zghvKckfrZKD1nRw/exec";
+
 
 // ── DIREKT ZUM RANKING SENDEN ──
 async function sendeZumRanking() {
   if (!studentName || !studentClass) {
     showToast("❌ Bitte zuerst Name und Klasse eintragen.", "#c0392b"); return;
-  }
-  if (WEBAPP_URL === "https://script.google.com/macros/s/AKfycbxDu-J5xJM3F-T37nCtPF2o0a7qQ_wIC_Cs2PYrK4CXsPepeAnvE5zghvKckfrZKD1nRw/exec") {
-    showToast("❌ Bitte zuerst die Web-App-URL im HTML eintragen.", "#c0392b"); return;
   }
 
   const btn = document.getElementById('rankingBtn');
